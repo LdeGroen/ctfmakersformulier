@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/ctfmakersformulier/static/css/main.cdde4272.css",
-    "main.js": "/ctfmakersformulier/static/js/main.8729f39f.js",
+    "main.css": "/ctfmakersformulier/static/css/main.dbfd6506.css",
+    "main.js": "/ctfmakersformulier/static/js/main.e14e5e8a.js",
     "static/js/453.93eddcd5.chunk.js": "/ctfmakersformulier/static/js/453.93eddcd5.chunk.js",
     "index.html": "/ctfmakersformulier/index.html",
-    "main.cdde4272.css.map": "/ctfmakersformulier/static/css/main.cdde4272.css.map",
-    "main.8729f39f.js.map": "/ctfmakersformulier/static/js/main.8729f39f.js.map",
+    "main.dbfd6506.css.map": "/ctfmakersformulier/static/css/main.dbfd6506.css.map",
+    "main.e14e5e8a.js.map": "/ctfmakersformulier/static/js/main.e14e5e8a.js.map",
     "453.93eddcd5.chunk.js.map": "/ctfmakersformulier/static/js/453.93eddcd5.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.cdde4272.css",
-    "static/js/main.8729f39f.js"
+    "static/css/main.dbfd6506.css",
+    "static/js/main.e14e5e8a.js"
   ]
 }
