@@ -26,19 +26,23 @@ jobs:
           # We tonen warnings in CI maar laten de build niet falen erop.
           CI: false
 
-      - name: Deploy build/ via FTP
+      - name: Deploy build/ via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          # Versleutelde FTP (FTPS-explicit) — stabieler dan plain FTP
+          protocol: ftps
+          # Plesk gebruikt een eigen cert (*.regelpaneel.com), niet voor ons domein —
+          # loose accepteert het zonder strict validation
+          security: loose
+          # Genoeg tijd voor de eerste full upload
+          timeout: 60000
           local-dir: ./build/
-          # state-name houdt bij wat geupload is, zodat alleen nieuwe/gewijzigde files gestuurd worden
           state-name: .ftp-deploy-sync-state.json
-          # zet op true voor volledige clean install (verwijdert oude files); false = incremental
           dangerous-clean-slate: false
-          # negeer git/node_modules/source files (we hosten alleen de build)
           exclude: |
             **/.git*
             **/.git*/**
