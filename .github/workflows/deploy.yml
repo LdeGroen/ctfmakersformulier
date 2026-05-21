@@ -21,6 +21,10 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
+        env:
+          # CRA promoveert lint-warnings naar errors als CI=true (GitHub default).
+          # We tonen warnings in CI maar laten de build niet falen erop.
+          CI: false
 
       - name: Deploy build/ via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

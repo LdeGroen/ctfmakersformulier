@@ -95,8 +95,6 @@ export class Client {
 }
 
 export class Databases {
-    constructor(_client) {}
-
     async listDocuments(_db, collectionIdOrName, queries = []) {
         const resource = resolveResource(collectionIdOrName);
 
@@ -130,6 +128,7 @@ export class Databases {
                     orderBy = q.field; orderDir = 'desc'; break;
                 case 'orderAsc':
                     orderBy = q.field; orderDir = 'asc'; break;
+                default: break;
             }
         });
 
@@ -245,7 +244,6 @@ export const ID = {
 // loopt nu via /api/public/checkout/merch). Houden we als no-op zodat oude
 // `new Functions(client)` regels niet crashen.
 export class Functions {
-    constructor(_client) {}
     async createExecution() {
         throw new Error('Appwrite Functions zijn vervangen door directe Laravel endpoints.');
     }
