@@ -1,0 +1,42 @@
+name: Deploy to Plesk
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Deploy build/ via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          local-dir: ./build/
+          # state-name houdt bij wat geupload is, zodat alleen nieuwe/gewijzigde files gestuurd worden
+          state-name: .ftp-deploy-sync-state.json
+          # zet op true voor volledige clean install (verwijdert oude files); false = incremental
+          dangerous-clean-slate: false
+          # negeer git/node_modules/source files (we hosten alleen de build)
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/src/**

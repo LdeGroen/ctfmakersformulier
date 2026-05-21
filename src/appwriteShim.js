@@ -104,18 +104,32 @@ export class Databases {
         let limit = 5000;
         let offset = 0;
         const equalFilters = {};
+        const advancedFilters = []; // {op, field, value(s)}
+        let orderBy = null;
+        let orderDir = null;
         let equalIds = null; // speciale case: Query.equal('$id', [ids])
 
         (queries || []).forEach(q => {
             if (!q) return;
-            if (q._q === 'limit') limit = q.value;
-            if (q._q === 'offset') offset = q.value;
-            if (q._q === 'equal') {
-                if (q.field === '$id' || q.field === 'id') {
-                    equalIds = Array.isArray(q.value) ? q.value : [q.value];
-                } else {
-                    equalFilters[q.field] = q.value;
-                }
+            switch (q._q) {
+                case 'limit': limit = q.value; break;
+                case 'offset': offset = q.value; break;
+                case 'equal':
+                    if (q.field === '$id' || q.field === 'id') {
+                        equalIds = Array.isArray(q.value) ? q.value : [q.value];
+                    } else {
+                        equalFilters[q.field] = q.value;
+                    }
+                    break;
+                case 'between':
+                case 'greaterThan':
+                case 'lessThan':
+                    advancedFilters.push(q);
+                    break;
+                case 'orderDesc':
+                    orderBy = q.field; orderDir = 'desc'; break;
+                case 'orderAsc':
+                    orderBy = q.field; orderDir = 'asc'; break;
             }
         });
 
@@ -138,8 +152,49 @@ export class Databases {
                 Object.entries(equalFilters).map(([k, v]) => [k, String(v)])
             ),
         });
+        // Advanced filters: zonder backend-ondersteuning haal je alles op en
+        // filtert de shim client-side. Backend wel als hij het kent.
+        advancedFilters.forEach((f, idx) => {
+            if (f._q === 'greaterThan') params.set(`${f.field}_gt`, String(f.value));
+            if (f._q === 'lessThan') params.set(`${f.field}_lt`, String(f.value));
+            if (f._q === 'between') {
+                params.set(`${f.field}_gte`, String(f.value[0]));
+                params.set(`${f.field}_lte`, String(f.value[1]));
+            }
+        });
+        if (orderBy) {
+            params.set('order_by', orderBy);
+            params.set('order_dir', orderDir);
+        }
+        // Apps die historische executions nodig hebben (archief, impact) sturen
+        // automatisch include_past=1 mee. Andere apps krijgen het future-only filter.
+        if (resource === 'executions' && typeof window !== 'undefined') {
+            const host = window.location?.hostname || '';
+            if (host.includes('archief') || host.includes('impact')) {
+                params.set('include_past', '1');
+            }
+        }
         const json = await apiFetch(`/api/public/${resource}?${params.toString()}`);
-        const documents = (json.data || []).map(wrapDoc);
+
+        let documents = (json.data || []).map(wrapDoc);
+
+        // Client-side filtering voor advanced filters (backend ondersteunt ze nog niet)
+        advancedFilters.forEach(f => {
+            if (f._q === 'greaterThan') documents = documents.filter(d => d[f.field] > f.value);
+            if (f._q === 'lessThan') documents = documents.filter(d => d[f.field] < f.value);
+            if (f._q === 'between') {
+                documents = documents.filter(d => d[f.field] >= f.value[0] && d[f.field] <= f.value[1]);
+            }
+        });
+        if (orderBy) {
+            documents.sort((a, b) => {
+                const av = a[orderBy], bv = b[orderBy];
+                if (av < bv) return orderDir === 'desc' ? 1 : -1;
+                if (av > bv) return orderDir === 'desc' ? -1 : 1;
+                return 0;
+            });
+        }
+
         return {
             documents,
             total: json.total ?? documents.length,
@@ -175,8 +230,31 @@ export const Query = {
     limit: (n) => ({ _q: 'limit', value: n }),
     offset: (n) => ({ _q: 'offset', value: n }),
     equal: (field, value) => ({ _q: 'equal', field, value }),
+    between: (field, from, to) => ({ _q: 'between', field, value: [from, to] }),
+    greaterThan: (field, value) => ({ _q: 'greaterThan', field, value }),
+    lessThan: (field, value) => ({ _q: 'lessThan', field, value }),
+    orderDesc: (field) => ({ _q: 'orderDesc', field }),
+    orderAsc: (field) => ({ _q: 'orderAsc', field }),
 };
 
 export const ID = {
     unique: () => null,
+};
+
+// Functions/ExecutionMethod stubs — niet meer in gebruik (ctfmerch checkout
+// loopt nu via /api/public/checkout/merch). Houden we als no-op zodat oude
+// `new Functions(client)` regels niet crashen.
+export class Functions {
+    constructor(_client) {}
+    async createExecution() {
+        throw new Error('Appwrite Functions zijn vervangen door directe Laravel endpoints.');
+    }
+}
+
+export const ExecutionMethod = {
+    GET: 'GET',
+    POST: 'POST',
+    PUT: 'PUT',
+    PATCH: 'PATCH',
+    DELETE: 'DELETE',
 };

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Client, Databases, Query } from './appwriteShim';
 
 // --- Appwrite Configuration ---
@@ -35,7 +35,7 @@ let databases;
 const translations = {
     nl: {
         title: "Hospitality & Techniek",
-        subtitle: "CafÃ© Theater Festival",
+        subtitle: "Café Theater Festival",
         chooseCompany: "Kies je gezelschap",
         selectCompany: "-- Selecteer een gezelschap --",
         loadingData: "Gegevens laden...",
@@ -75,7 +75,7 @@ const translations = {
     },
     en: {
         title: "Hospitality & Tech",
-        subtitle: "CafÃ© Theatre Festival",
+        subtitle: "Café Theatre Festival",
         chooseCompany: "Choose your company",
         selectCompany: "-- Select a company --",
         loadingData: "Loading data...",
@@ -162,7 +162,7 @@ const HospitalityForm = ({ t, lang, onFormSubmit, initialCompanyId }) => {
             databases = new Databases(client);
         } else {
             console.error("Appwrite SDK is not globally available.");
-            setError("Database client kon niet worden geÃ¯nitialiseerd.");
+            setError("Database client kon niet worden geïnitialiseerd.");
         }
     }, []);
 
